@@ -45,7 +45,7 @@
             --pop-red: #FF3333;
             --pop-green: #00FF66;
             --black: #111111;
-            --box-size: 14px;
+            --box-size: 20px; /* Tamaño mucho más grande y cómodo para evitar toques accidentales */
         }
 
         body {
@@ -108,41 +108,63 @@
             border-color: #fff transparent transparent; z-index: 1;
         }
 
-        /* --- DAIMOKUGRAMA GRID --- */
+        /* --- DAIMOKUGRAMA GRID CON SCROLL HORIZONTAL POP-ART --- */
         .daimokugrama-wrapper {
-            display: flex; flex-wrap: wrap; justify-content: center;
-            gap: 12px; padding: 15px; width: 100%;
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            gap: 16px;
+            padding: 20px;
+            width: 100%;
+            overflow-x: auto;
             background-color: var(--pop-cyan);
             border: 4px solid var(--black);
             box-shadow: inset 4px 4px 0px rgba(0,0,0,0.2);
             border-radius: 8px;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
         }
+
+        /* Custom scrollbar para la grilla estilo Pop-Art */
+        .daimokugrama-wrapper::-webkit-scrollbar {
+            height: 12px;
+        }
+        .daimokugrama-wrapper::-webkit-scrollbar-track {
+            background: #fff;
+            border: 3px solid var(--black);
+            border-radius: 6px;
+        }
+        .daimokugrama-wrapper::-webkit-scrollbar-thumb {
+            background: var(--pop-magenta);
+            border: 2px solid var(--black);
+            border-radius: 6px;
+        }
+
         .letter-grid {
             display: grid;
             grid-template-columns: repeat(6, var(--box-size)); 
             grid-template-rows: repeat(10, var(--box-size));
-            gap: 1px;
+            gap: 2px;
+            flex-shrink: 0;
+            scroll-snap-align: start;
         }
         .box { width: 100%; height: 100%; }
         .box.active-area {
             background-color: #fff; border: 2px solid var(--black);
             cursor: pointer; transition: transform 0.1s, background-color 0.2s;
+            border-radius: 3px;
         }
-        .box.active-area:hover { transform: scale(1.2); z-index: 10; position: relative; }
+        .box.active-area:hover { transform: scale(1.15); z-index: 10; position: relative; }
         .box.filled { background-color: var(--pop-magenta); }
 
         @media (max-width: 768px) {
-            :root { --box-size: 10px; }
+            :root { --box-size: 18px; } /* Excelente tamaño de toque en tablets */
             .pop-card { min-height: 45vh; padding: 15px; }
-            .daimokugrama-wrapper { gap: 8px; padding: 10px; }
+            .daimokugrama-wrapper { gap: 12px; padding: 16px; }
         }
         @media (max-width: 480px) {
-            :root { --box-size: 7px; }
-            .daimokugrama-wrapper { gap: 4px; padding: 8px; }
-        }
-        @media (max-width: 360px) {
-            :root { --box-size: 5.5px; }
-            .daimokugrama-wrapper { gap: 2px; padding: 6px; }
+            :root { --box-size: 16px; } /* Mínimo recomendado para comodidad móvil sin desbordes */
+            .daimokugrama-wrapper { gap: 8px; padding: 12px; }
         }
 
         /* --- TIRADOR DE TIEMPO --- */
@@ -234,22 +256,29 @@
 
         <!-- CUADRANTE 2: DAIMOKUGRAMA (50vh) -->
         <section class="pop-card bg-pop-yellow">
-            <div class="flex items-center justify-between w-full mb-4">
+            <div class="flex items-center justify-between w-full mb-2">
                 <div class="w-10"></div> <!-- Espaciador para centrar -->
                 <h1 class="font-bangers text-5xl md:text-6xl text-white text-center transform -rotate-2" style="text-shadow: 4px 4px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000;">
                     SUCESORES
                 </h1>
-                <button id="resetGridBtn" class="font-bangers text-2xl bg-pop-red text-white border-4 border-black p-1 px-3 rounded-xl shadow-[3px_3px_0px_#000] hover:translate-y-0.5 transition-transform" title="Reiniciar Daimokugrama">
+                <button id="resetGridBtn" class="font-bangers text-2xl bg-pop-red text-white border-4 border-black p-1 px-3 rounded-xl shadow-[3px_3px_0px_#000] hover:translate-y-0.5 transition-transform" title="Reiniciar todo">
                     🔄
                 </button>
+            </div>
+
+            <!-- Contador de cuadraditos disponibles de manera llamativa -->
+            <div class="mb-4 font-bangers text-lg md:text-xl bg-pop-magenta text-white inline-block px-4 py-2 border-4 border-black shadow-[4px_4px_0px_#000] transform rotate-1">
+                Cuadraditos para pintar: <span id="creditCount" class="text-pop-yellow text-3xl font-black">0</span>
             </div>
             
             <div class="daimokugrama-wrapper" id="wordContainer">
                 <!-- Letras inyectadas con JS -->
             </div>
             
-            <div class="mt-4 font-bangers text-xl bg-white inline-block px-4 py-1 border-4 border-black shadow-[4px_4px_0px_#000] transform rotate-1">
-                🔲 = 5 MINUTOS
+            <div class="mt-4 flex flex-col sm:flex-row gap-2 items-center justify-center font-bangers text-base bg-white px-4 py-1 border-4 border-black shadow-[4px_4px_0px_#000] transform -rotate-1 text-center w-full">
+                <span>🔲 = 5 MINUTOS DE DAIMOKU</span>
+                <span class="hidden sm:inline">|</span>
+                <span class="text-pop-magenta animate-pulse-fast">👋 DESLIZA PARA VER LA PALABRA COMPLETA ➡️</span>
             </div>
         </section>
 
@@ -305,7 +334,7 @@
     <!-- BANNER DE INSTALACIÓN PWA (Android / iOS) -->
     <div id="pwaInstallBanner" class="fixed bottom-0 left-0 right-0 z-50 p-4 bg-pop-yellow border-t-8 border-black shadow-[0_-8px_0px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-center justify-between gap-4 transition-transform duration-500 translate-y-full">
         <div class="flex items-center gap-4">
-            <img src="icon.png" alt="Icono Daimokugrama" class="w-16 h-16 rounded-2xl border-4 border-black shadow-[3px_3px_0px_#000] flex-shrink-0">
+            <img src="icon-192.png" alt="Icono Daimokugrama" class="w-16 h-16 rounded-2xl border-4 border-black shadow-[3px_3px_0px_#000] flex-shrink-0">
             <div>
                 <h3 class="font-bangers text-2xl md:text-3xl text-black leading-tight">¡AÑADE DAIMOKUGRAMA A TU INICIO! 📲</h3>
                 <p id="pwaInstallText" class="text-sm md:text-base text-black font-bold font-sans">Instala esta aplicación en tu celular para acceder de forma instantánea y usarla sin internet.</p>
@@ -390,12 +419,22 @@
         const word = "SUCESORES";
         const container = document.getElementById('wordContainer');
         const storageKey = 'sucesores_progreso_v3';
+        const creditsKey = 'sucesores_creditos_v3';
+
         let progress = JSON.parse(localStorage.getItem(storageKey)) || {};
+        let credits = parseInt(localStorage.getItem(creditsKey)) || 0;
         let boxCounter = 0;
+
+        const creditCountSpan = document.getElementById('creditCount');
+
+        function updateCreditsDisplay() {
+            creditCountSpan.textContent = credits;
+        }
 
         word.split('').forEach((letter) => {
             const letterGrid = document.createElement('div');
             letterGrid.className = 'letter-grid';
+            letterGrid.style.flexShrink = '0'; // Evita que las letras se achiquen o deformen
             
             fonts[letter].forEach((val) => {
                 const box = document.createElement('div');
@@ -408,9 +447,27 @@
                     if (progress[currentId]) { box.classList.add('filled'); }
 
                     box.addEventListener('click', () => {
-                        box.classList.toggle('filled');
-                        progress[currentId] = box.classList.contains('filled');
+                        // REGLA 2: No se puede despintar ninguno
+                        if (box.classList.contains('filled')) {
+                            alert('⭐ ¡Este cuadradito ya está pintado y completado! No se puede despintar.');
+                            return;
+                        }
+                        
+                        // REGLA 1: Solo se puede pintar si hay cuadraditos/créditos acumulados por cronómetro terminado
+                        if (credits <= 0) {
+                            alert('⏰ ¡No tienes cuadraditos disponibles para pintar!\n\nCompleta una sesión del cronómetro de Daimoku (mínimo 5 minutos) para ganar créditos y poder pintar tu Daimokugrama.');
+                            return;
+                        }
+                        
+                        // Pintar el cuadradito
+                        box.classList.add('filled');
+                        progress[currentId] = true;
                         localStorage.setItem(storageKey, JSON.stringify(progress));
+                        
+                        // Consumir 1 crédito de cuadradito
+                        credits--;
+                        localStorage.setItem(creditsKey, credits);
+                        updateCreditsDisplay();
                     });
                 }
                 letterGrid.appendChild(box);
@@ -494,8 +551,13 @@
                         const boxesToPaint = minsSelected / 5;
                         const plural = boxesToPaint > 1 ? "cuadraditos" : "cuadradito";
 
+                        // REGLA 1: Ganar créditos/cuadraditos al terminar
+                        credits += boxesToPaint;
+                        localStorage.setItem(creditsKey, credits);
+                        updateCreditsDisplay();
+
                         setTimeout(() => {
-                            alert(`¡TIEMPO CUMPLIDO! 🌟\n\nDesliza hacia abajo y pinta ${boxesToPaint} ${plural} en tu Daimokugrama.`);
+                            alert(`¡TIEMPO CUMPLIDO! 🌟\n\nHas completado ${minsSelected} minutos de Daimoku y ganaste ${boxesToPaint} ${plural}.\n\n¡Toca los espacios vacíos del Daimokugrama para pintarlos!`);
                             timeRemaining = parseInt(timeSlider.value) * 60;
                             updateDisplay(timeRemaining);
                         }, 100);
@@ -516,14 +578,19 @@
             setTimeout(() => { leverHandle.style.top = '8px'; }, 300);
         });
 
-        // Reset Daimokugrama
+        // Reset Daimokugrama (Pide confirmación antes de reiniciar TODO, tal como se solicitó)
         resetGridBtn.addEventListener('click', () => {
-            if (confirm('¿Estás seguro de que quieres reiniciar tu Daimokugrama? Se perderá todo el progreso pintado.')) {
+            if (confirm('⚠️ ¿Estás seguro de que quieres reiniciar TODO?\n\nEsta acción borrará todas las letras que has pintado y restablecerá tus cuadraditos ganados a 0. No podrás recuperarlos.')) {
                 progress = {};
+                credits = 0;
                 localStorage.setItem(storageKey, JSON.stringify(progress));
+                localStorage.setItem(creditsKey, credits);
+                
                 document.querySelectorAll('.box.active-area').forEach(box => {
                     box.classList.remove('filled');
                 });
+                
+                updateCreditsDisplay();
             }
         });
 
@@ -544,6 +611,8 @@
             });
         });
 
+        // Inicializar visualización de créditos ganados al cargar
+        updateCreditsDisplay();
         updateDisplay(timeRemaining);
 
     </script>
