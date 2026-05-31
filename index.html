@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daimokugrama - Sucesores</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FFE100">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Daimokugrama">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -187,7 +196,7 @@
         .goal-input:focus { border-bottom-color: var(--pop-magenta); }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-8 pb-32"> <!-- pb-32 para dar espacio al banner inferior de instalación -->
 
     <!-- GRILLA PRINCIPAL: 1 columna en celular (4 bloques apilados), 2 columnas en PC -->
     <main class="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
@@ -293,8 +302,82 @@
 
     </main>
 
+    <!-- BANNER DE INSTALACIÓN PWA (Android / iOS) -->
+    <div id="pwaInstallBanner" class="fixed bottom-0 left-0 right-0 z-50 p-4 bg-pop-yellow border-t-8 border-black shadow-[0_-8px_0px_rgba(0,0,0,0.15)] flex flex-col md:flex-row items-center justify-between gap-4 transition-transform duration-500 translate-y-full">
+        <div class="flex items-center gap-4">
+            <img src="icon.png" alt="Icono Daimokugrama" class="w-16 h-16 rounded-2xl border-4 border-black shadow-[3px_3px_0px_#000] flex-shrink-0">
+            <div>
+                <h3 class="font-bangers text-2xl md:text-3xl text-black leading-tight">¡AÑADE DAIMOKUGRAMA A TU INICIO! 📲</h3>
+                <p id="pwaInstallText" class="text-sm md:text-base text-black font-bold font-sans">Instala esta aplicación en tu celular para acceder de forma instantánea y usarla sin internet.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+            <button id="pwaInstallBtn" class="font-bangers text-xl md:text-2xl bg-pop-magenta text-white border-4 border-black px-6 py-2 rounded-xl shadow-[4px_4px_0px_#000] hover:translate-y-0.5 transition-transform w-full md:w-auto text-center">
+                📲 INSTALAR AHORA
+            </button>
+            <button id="pwaCloseBtn" class="font-bangers text-xl bg-white text-black border-4 border-black px-4 py-2 rounded-xl shadow-[4px_4px_0px_#000] hover:translate-y-0.5 transition-transform">
+                ❌
+            </button>
+        </div>
+    </div>
+
     <script>
-        // --- 1. DAIMOKUGRAMA LOGIC ---
+        // --- 1. REGISTRO DE SERVICE WORKER ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                    .catch(err => console.error('Error al registrar el Service Worker:', err));
+            });
+        }
+
+        // --- 2. CONTROLADORES DE INSTALACIÓN PWA ---
+        let deferredPrompt;
+        const installBanner = document.getElementById('pwaInstallBanner');
+        const installBtn = document.getElementById('pwaInstallBtn');
+        const closeBtn = document.getElementById('pwaCloseBtn');
+        const installText = document.getElementById('pwaInstallText');
+
+        // Capturar prompt de instalación en Android/Chrome
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Mostrar banner
+            installBanner.classList.remove('translate-y-full');
+        });
+
+        // Detectar si es iOS y si no está en pantalla de inicio ya (standalone)
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+        if (isIOS && !isStandalone) {
+            // Modificar textos explicativos de instalación en iOS
+            installText.innerHTML = "Toca el botón <strong>Compartir 📤</strong> abajo en Safari y selecciona <strong>'Agregar a inicio' ➕</strong>.";
+            installBtn.innerHTML = "📤 CÓMO INSTALAR";
+            
+            // Mostrar el banner de manera proactiva en iOS
+            setTimeout(() => {
+                installBanner.classList.remove('translate-y-full');
+            }, 1500);
+        }
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`Elección del usuario de instalación: ${outcome}`);
+                deferredPrompt = null;
+                installBanner.classList.add('translate-y-full');
+            } else if (isIOS) {
+                alert("Para instalar en tu iPhone/iPad:\n\n1. Pulsa el botón de compartir 📤 en la parte inferior de Safari.\n2. Desliza hacia abajo y selecciona 'Agregar a inicio' ➕.\n3. ¡Listo! Se abrirá como una aplicación nativa.");
+            }
+        });
+
+        closeBtn.addEventListener('click', () => {
+            installBanner.classList.add('translate-y-full');
+        });
+
+        // --- 3. DAIMOKUGRAMA LOGIC ---
         const fonts = {
             'S': [1,1,1,1,1,1, 1,1,1,1,1,1, 1,1,0,0,0,0, 1,1,0,0,0,0, 1,1,1,1,1,1, 1,1,1,1,1,1, 0,0,0,0,1,1, 0,0,0,0,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1],
             'U': [1,1,0,0,1,1, 1,1,0,0,1,1, 1,1,0,0,1,1, 1,1,0,0,1,1, 1,1,0,0,1,1, 1,1,0,0,1,1, 1,1,0,0,1,1, 1,1,0,0,1,1, 1,1,1,1,1,1, 1,1,1,1,1,1],
@@ -335,7 +418,7 @@
             container.appendChild(letterGrid);
         });
 
-        // --- 2. TIMING Y CONTROLES ---
+        // --- 4. TIMING Y CONTROLES ---
         let timerInterval;
         let timeRemaining = 300; 
         let isRunning = false;
@@ -375,7 +458,7 @@
         function playPopSound() {
             initAudio();
             const osc = audioCtx.createOscillator();
-            const gain = ctx = audioCtx.createGain();
+            const gain = audioCtx.createGain();
             osc.type = 'square';
             osc.frequency.setValueAtTime(500, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.2);
@@ -444,7 +527,7 @@
             }
         });
 
-        // --- 3. GUARDADO DE OBJETIVOS (Memoria Local) ---
+        // --- 5. GUARDADO DE OBJETIVOS (Memoria Local) ---
         const inputs = ['obj1', 'obj2', 'obj3', 'obj4'];
         
         inputs.forEach(id => {
